@@ -18,24 +18,31 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/kprc/basserver/dns/server"
 	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
+	"github.com/kprc/basserver/config"
+	"github.com/kprc/basserver/dns/server"
+	"github.com/spf13/cobra"
 )
 
-var cfgFile string
+//var cfgFile string
+
+var (
+	cmdrootudpport    int
+	cmdroottcpport    int
+	cmdropstennap     string
+	cmdbastokenaddr   string
+	cmdbasmgraddr     string
+	cmdconfigfilename string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "app",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "basd",
+	Short: "start basd in current shell",
+	Long:  `start basd in current shell`,
 	Run: func(cmd *cobra.Command, args []string) {
+		InitCfg()
+
 		BAS_Ethereum.RecoverContract()
 		server.DNSServerDaemon()
 	},
@@ -50,19 +57,79 @@ func Execute() {
 	}
 }
 
-//
-//func init() {
-//	cobra.OnInitialize(initConfig)
-//
-//	// Here you will define your flags and configuration settings.
-//	// Cobra supports persistent flags, which, if defined here,
-//	// will be global for your application.
-//	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.app.yaml)")
-//
-//	// Cobra also supports local flags, which will only run
-//	// when this action is called directly.
-//	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-//}
+func InitCfg() {
+	if cmdconfigfilename != "" {
+		cfg := config.LoadFromCfgFile(cmdconfigfilename)
+		if cfg == nil {
+			return
+		}
+	} else {
+		config.LoadFromCmd(cfginit())
+	}
+	Set2SmartContract()
+}
+
+func Set2SmartContract() {
+	cfg := config.GetBasDCfg()
+
+	if cfg.RopstenNAP != "" {
+		BAS_Ethereum.RopstenNetworkAccessPoint = cfg.RopstenNAP
+	}
+
+	if cfg.TokenAddr != "" {
+		BAS_Ethereum.BASTokenAddress = cfg.TokenAddr
+	}
+
+	if cfg.MgrAddr != "" {
+		BAS_Ethereum.BASManagerAddress = cfg.MgrAddr
+	}
+
+}
+
+func cfginit() *config.BASDConfig {
+	cfg := &config.BASDConfig{}
+	cfg.InitCfg()
+	if cmdrootudpport > 0 {
+		cfg.UpdPort = cmdrootudpport
+	}
+	if cmdroottcpport > 0 {
+		cfg.TcpPort = cmdroottcpport
+	}
+	if cmdropstennap != "" {
+		cfg.RopstenNAP = cmdropstennap
+	}
+	if cmdbastokenaddr != "" {
+		cfg.TokenAddr = cmdbastokenaddr
+	}
+	if cmdbasmgraddr != "" {
+		cfg.MgrAddr = cmdbasmgraddr
+	}
+
+	return cfg
+
+}
+
+func init() {
+	//cobra.OnInitialize(initConfig)
+
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.app.yaml)")
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	rootCmd.Flags().IntVarP(&cmdrootudpport, "tcp-listen-port", "t", 53, "local tcp listen port")
+	rootCmd.Flags().IntVarP(&cmdrootudpport, "udp-listen-port", "u", 53, "local udp listen port")
+	rootCmd.Flags().StringVarP(&cmdropstennap, "ropsten-network-access-point", "r", "", "ropsten network access point")
+	rootCmd.Flags().StringVarP(&cmdbastokenaddr, "bas-token-address", "a", "", "bas token address")
+	rootCmd.Flags().StringVarP(&cmdbasmgraddr, "bas-mgr-address", "m", "", "bas manager address")
+	rootCmd.Flags().StringVarP(&cmdconfigfilename, "config-file-name", "c", "", "configuration file name")
+
+}
+
 //
 //// initConfig reads in config file and ENV variables if set.
 //func initConfig() {

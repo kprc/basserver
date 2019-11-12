@@ -1,28 +1,26 @@
 package server
 
 import (
-	"github.com/miekg/dns"
+	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
 	"github.com/kprc/basserver/config"
-	"strconv"
+	"github.com/miekg/dns"
 	"log"
 	"net"
-	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
+	"strconv"
 )
-
 
 var (
 	dnshandle dns.HandlerFunc
 )
 
-
-func DnsHandle(writer dns.ResponseWriter,msg *dns.Msg)   {
+func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 	//todo...
-    m:=msg.Copy()
+	m := msg.Copy()
 
 	m.Compress = true
 	m.Response = true
 
-	A:=&dns.A{}
+	A := &dns.A{}
 
 	A.Hdr.Name = m.Question[0].Name
 	A.Hdr.Rrtype = dns.TypeA
@@ -31,18 +29,17 @@ func DnsHandle(writer dns.ResponseWriter,msg *dns.Msg)   {
 	A.Hdr.Rdlength = 4
 	//A.A = net.ParseIP("123.56.153.221")
 
-
 	//hash:=solsha3.SoliditySHA3(solsha3.String(A.Hdr.Name))
-	qn:=A.Hdr.Name
+	qn := A.Hdr.Name
 
-	if qn[len(qn)-1] == '.'{
+	if qn[len(qn)-1] == '.' {
 		qn = qn[:len(qn)-1]
 
 	}
 
-	dr,err:=BAS_Ethereum.QueryByString(qn)
+	dr, err := BAS_Ethereum.QueryByString(qn)
 
-	if err!=nil{
+	if err != nil {
 		log.Println("Can't Get Domain Name info")
 		m.Rcode = dns.RcodeBadKey
 
@@ -51,14 +48,14 @@ func DnsHandle(writer dns.ResponseWriter,msg *dns.Msg)   {
 		return
 	}
 
-	A.A = net.IPv4(dr.IPv4[0],dr.IPv4[1],dr.IPv4[2],dr.IPv4[3])
+	A.A = net.IPv4(dr.IPv4[0], dr.IPv4[1], dr.IPv4[2], dr.IPv4[3])
 
-	log.Println("Request Name: ",qn,A.A.String())
-	log.Println("debug name: ",A.Hdr.Name)
+	log.Println("Request Name: ", qn, A.A.String())
+	log.Println("debug name: ", A.Hdr.Name)
 
 	var rr []dns.RR
 
-	rr = append(rr,A)
+	rr = append(rr, A)
 
 	m.Answer = rr
 
@@ -66,27 +63,22 @@ func DnsHandle(writer dns.ResponseWriter,msg *dns.Msg)   {
 
 }
 
-func DNSServerDaemon()  {
-	cfg:=config.GetBasDCfg()
-	uport:=cfg.UpdPort
-	uaddr:=":"+strconv.Itoa(uport)
+func DNSServerDaemon() {
+	cfg := config.GetBasDCfg()
+	uport := cfg.UpdPort
+	uaddr := ":" + strconv.Itoa(uport)
 
 	dnshandle = DnsHandle
 
-	log.Println("DNS Server Start at udp",uaddr)
+	log.Println("DNS Server Start at udp", uaddr)
 
-	go dns.ListenAndServe(uaddr,"udp4",dnshandle)
+	go dns.ListenAndServe(uaddr, "udp4", dnshandle)
 
-	tport:=cfg.TcpPort
+	tport := cfg.TcpPort
 
-	taddr:=":"+strconv.Itoa(tport)
+	taddr := ":" + strconv.Itoa(tport)
 
-	log.Println("DNS Server Start at tcp",uaddr)
+	log.Println("DNS Server Start at tcp", uaddr)
 
-	log.Fatal(dns.ListenAndServe(taddr,"tcp4",dnshandle))
+	log.Fatal(dns.ListenAndServe(taddr, "tcp4", dnshandle))
 }
-
-
-
-
-

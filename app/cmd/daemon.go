@@ -15,23 +15,53 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
+	"github.com/kprc/basserver/dns/server"
+	"github.com/kprc/nbsnetwork/tools"
+	"github.com/sevlyar/go-daemon"
 	"github.com/spf13/cobra"
+	"log"
+	"os"
+	"path"
 )
 
 // daemonCmd represents the daemon command
 var daemonCmd = &cobra.Command{
 	Use:   "daemon",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "basd start in backend",
+	Long:  `basd start in backend`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("daemon called")
+		h, _ := tools.Home()
+
+		home := path.Join(h, ".basd")
+
+		if !tools.FileExists(home) {
+			os.MkdirAll(home, 0755)
+		}
+
+		daemondir := home
+		cntxt := daemon.Context{
+			PidFileName: path.Join(daemondir, "basd.pid"),
+			PidFilePerm: 0644,
+			LogFileName: path.Join(daemondir, "basd.log"),
+			LogFilePerm: 0640,
+			WorkDir:     daemondir,
+			Umask:       027,
+			Args:        []string{},
+		}
+		d, err := cntxt.Reborn()
+		if err != nil {
+			log.Fatal("Unable to run: ", err)
+		}
+		if d != nil {
+			log.Println("basd starting, please check log at:", path.Join(daemondir, "basd.log"))
+			return
+		}
+		defer cntxt.Release()
+		InitCfg()
+
+		BAS_Ethereum.RecoverContract()
+		server.DNSServerDaemon()
 	},
 }
 
@@ -47,4 +77,12 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// daemonCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	daemonCmd.Flags().IntVarP(&cmdrootudpport, "tcp-listen-port", "t", 53, "local tcp listen port")
+	daemonCmd.Flags().IntVarP(&cmdrootudpport, "udp-listen-port", "u", 53, "local udp listen port")
+	daemonCmd.Flags().StringVarP(&cmdropstennap, "ropsten-network-access-point", "r", "", "ropsten network access point")
+	daemonCmd.Flags().StringVarP(&cmdbastokenaddr, "bas-token-address", "a", "", "bas token address")
+	daemonCmd.Flags().StringVarP(&cmdbasmgraddr, "bas-mgr-address", "m", "", "bas manager address")
+	daemonCmd.Flags().StringVarP(&cmdconfigfilename, "config-file-name", "c", "", "configuration file name")
+
 }
