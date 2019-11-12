@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 # The name of the executable (default is current directory name)
 BASENAME := $(shell echo $${PWD\#\#*/})
-TARGET := basd
+TARGET := linux-amd64-basd
 .DEFAULT_GOAL: $(TARGET)
 
 # These will be provided to the target
@@ -46,7 +46,7 @@ staticfile2bin:
 #$(TARGET): staticfile2bin proto $(SRC)
 #	@go build $(LDFLAGS) -o $(TARGET)
 $(TARGET): $(SRC)
-	@go build $(LDFLAGS) -o $(TARGET)
+	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(TARGET)
 
 build: $(TARGET)
 	@true

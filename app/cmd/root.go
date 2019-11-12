@@ -19,6 +19,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/kprc/basserver/dns/server"
+	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
 )
 
 var cfgFile string
@@ -34,7 +36,8 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("root called")
+		BAS_Ethereum.RecoverContract()
+		server.DNSServerDaemon()
 	},
 }
 
