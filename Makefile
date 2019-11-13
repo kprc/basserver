@@ -30,14 +30,14 @@ Test:
 	@echo $(BUILDTIME)
 	@echo $$(which ${BASENAME}) $(subst ${BASENAME},$(TARGET),$(srcname))
 
-rpcservice := app/pb
-dhtrpc := dht/pb
-assetdir := ui/asset
-wifiapdir := wifiap/control
+rpcservice := app/cmdpb
+#dhtrpc := dht/pb
+#assetdir := ui/asset
+#wifiapdir := wifiap/control
 
 proto:
 	protoc -I=$(rpcservice)  --go_out=plugins=grpc:${rpcservice}   ${rpcservice}/*.proto
-	protoc -I=$(dhtrpc)  --go_out=plugins=grpc:${dhtrpc}   ${dhtrpc}/*.proto
+#	protoc -I=$(dhtrpc)  --go_out=plugins=grpc:${dhtrpc}   ${dhtrpc}/*.proto
 
 staticfile2bin:
 	go-bindata -o $(assetdir)/res.go -pkg=asset ui/xadmin/...
@@ -45,7 +45,7 @@ staticfile2bin:
 
 #$(TARGET): staticfile2bin proto $(SRC)
 #	@go build $(LDFLAGS) -o $(TARGET)
-$(TARGET): $(SRC)
+$(TARGET): proto $(SRC)
 	@go build $(LDFLAGS) -o $(TARGET)
 
 build: $(TARGET)

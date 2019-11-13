@@ -22,6 +22,9 @@ import (
 	"github.com/kprc/basserver/config"
 	"github.com/kprc/basserver/dns/server"
 	"github.com/spf13/cobra"
+	"github.com/kprc/basserver/app/cmdcommon"
+	"log"
+	"github.com/kprc/basserver/app/cmdservice"
 )
 
 //var cfgFile string
@@ -41,10 +44,20 @@ var rootCmd = &cobra.Command{
 	Short: "start basd in current shell",
 	Long:  `start basd in current shell`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		_,err:=cmdcommon.IsProcessCanStarted()
+		if err!=nil{
+			log.Println(err)
+			return
+		}
+
 		InitCfg()
+		config.GetBasDCfg().Save()
 
 		BAS_Ethereum.RecoverContract()
-		server.DNSServerDaemon()
+		go server.DNSServerDaemon()
+
+		cmdservice.GetCmdServerInst().StartCmdService()
 	},
 }
 

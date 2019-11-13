@@ -17,12 +17,15 @@ package cmd
 import (
 	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
 	"github.com/kprc/basserver/dns/server"
-	"github.com/kprc/nbsnetwork/tools"
+
 	"github.com/sevlyar/go-daemon"
 	"github.com/spf13/cobra"
 	"log"
-	"os"
+
 	"path"
+	"github.com/kprc/basserver/app/cmdcommon"
+	"github.com/kprc/basserver/config"
+	"github.com/kprc/basserver/app/cmdservice"
 )
 
 // daemonCmd represents the daemon command
@@ -31,15 +34,17 @@ var daemonCmd = &cobra.Command{
 	Short: "basd start in backend",
 	Long:  `basd start in backend`,
 	Run: func(cmd *cobra.Command, args []string) {
-		h, _ := tools.Home()
 
-		home := path.Join(h, ".basd")
-
-		if !tools.FileExists(home) {
-			os.MkdirAll(home, 0755)
+		_,err:=cmdcommon.IsProcessCanStarted()
+		if err!=nil{
+			log.Println(err)
+			return
 		}
 
-		daemondir := home
+		InitCfg()
+		config.GetBasDCfg().Save()
+
+		daemondir := config.GetBASDHomeDir()
 		cntxt := daemon.Context{
 			PidFileName: path.Join(daemondir, "basd.pid"),
 			PidFilePerm: 0644,
@@ -58,10 +63,10 @@ var daemonCmd = &cobra.Command{
 			return
 		}
 		defer cntxt.Release()
-		InitCfg()
 
 		BAS_Ethereum.RecoverContract()
-		server.DNSServerDaemon()
+		go server.DNSServerDaemon()
+		cmdservice.GetCmdServerInst().StartCmdService()
 	},
 }
 

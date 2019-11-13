@@ -5,6 +5,13 @@ import (
 	"github.com/kprc/nbsnetwork/tools"
 	"log"
 	"sync"
+	"path"
+	"os"
+)
+
+const(
+	BASD_HomeDir = ".basd"
+	BASD_CFG_FileName = "basd.json"
 )
 
 type BASDConfig struct {
@@ -13,6 +20,7 @@ type BASDConfig struct {
 	RopstenNAP string `json:"ropstennap"`
 	TokenAddr  string `json:"tokenaddr"`
 	MgrAddr    string `json:"mgraddr"`
+	CmdListenPort string `json:"cmdlistenport"`
 }
 
 var (
@@ -20,9 +28,35 @@ var (
 	bascfgInstLock sync.Mutex
 )
 
-func (bc *BASDConfig) InitCfg() {
+func (bc *BASDConfig) InitCfg() *BASDConfig{
 	bc.UpdPort = 53
 	bc.TcpPort = 53
+	bc.CmdListenPort = "127.0.0.1:59527"
+
+	return bc
+}
+
+func (bc *BASDConfig)Load()  *BASDConfig{
+	if !tools.FileExists(GetBASDCFGFile()){
+		return nil
+	}
+
+	jbytes,err:=tools.OpenAndReadAll(GetBASDCFGFile())
+	if err!=nil{
+		log.Println("load file failed",err)
+		return nil
+	}
+
+	//bc1:=&BASDConfig{}
+
+	err = json.Unmarshal(jbytes,bc)
+	if err!=nil{
+		log.Println("load configuration unmarshal failed",err)
+		return nil
+	}
+
+	return bc
+
 }
 
 func newBasDCfg() *BASDConfig {
@@ -45,6 +79,13 @@ func GetBasDCfg() *BASDConfig {
 
 	return bascfgInst
 }
+
+func PreLoad() *BASDConfig {
+	bc:=&BASDConfig{}
+
+	return bc.Load()
+}
+
 
 func LoadFromCfgFile(file string) *BASDConfig {
 	bc := &BASDConfig{}
@@ -73,7 +114,46 @@ func LoadFromCmd(bc *BASDConfig) *BASDConfig {
 	bascfgInstLock.Lock()
 	defer bascfgInstLock.Unlock()
 
-	bascfgInst = bc
+	bascfgInst = bc.Load()
 
 	return bascfgInst
+}
+
+func GetBASDHomeDir() string {
+	curHome, err:= tools.Home()
+	if err!=nil{
+		log.Fatal(err)
+	}
+
+	return path.Join(curHome,BASD_HomeDir)
+}
+
+func GetBASDCFGFile() string {
+	return path.Join(GetBASDHomeDir(),BASD_CFG_FileName)
+}
+
+func (bc *BASDConfig)Save()  {
+	jbytes,err:=json.Marshal(*bc)
+
+	if err!=nil{
+		log.Println("Save BASD Configuration json marshal failed",err)
+	}
+
+	if !tools.FileExists(GetBASDHomeDir()){
+		os.MkdirAll(GetBASDHomeDir(),0755)
+	}
+
+	err = tools.Save2File(jbytes,GetBASDCFGFile())
+	if err!=nil{
+		log.Println("Save BASD Configuration to file failed",err)
+	}
+
+}
+
+func IsInitialized()  bool{
+	if tools.FileExists(GetBASDCFGFile()){
+		return true
+	}
+
+	return false
 }

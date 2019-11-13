@@ -13,6 +13,11 @@ var (
 	dnshandle dns.HandlerFunc
 )
 
+var(
+	udpServer *dns.Server
+	tcpServer *dns.Server
+)
+
 func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 	//todo...
 	m := msg.Copy()
@@ -72,7 +77,12 @@ func DNSServerDaemon() {
 
 	log.Println("DNS Server Start at udp", uaddr)
 
-	go dns.ListenAndServe(uaddr, "udp4", dnshandle)
+	udpServer = &dns.Server{}
+	udpServer.Addr = uaddr
+	udpServer.Handler = dnshandle
+	udpServer.Net = "udp4"
+
+	go udpServer.ListenAndServe()
 
 	tport := cfg.TcpPort
 
@@ -80,5 +90,19 @@ func DNSServerDaemon() {
 
 	log.Println("DNS Server Start at tcp", uaddr)
 
-	log.Fatal(dns.ListenAndServe(taddr, "tcp4", dnshandle))
+	tcpServer = &dns.Server{Addr:taddr,Net:"tcp4",Handler:dnshandle}
+
+	log.Fatal(tcpServer.ListenAndServe())
+}
+
+func DNSServerStop()  {
+	if udpServer != nil{
+		udpServer.Shutdown()
+		udpServer = nil
+	}
+
+	if tcpServer != nil{
+		tcpServer.Shutdown()
+		tcpServer = nil
+	}
 }
