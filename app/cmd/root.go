@@ -103,10 +103,10 @@ func Set2SmartContract() {
 
 func cfginit(bc *config.BASDConfig) *config.BASDConfig {
 	cfg := bc
-	if cmdrootudpport != 65566 {
+	if cmdrootudpport >0 && cmdrootudpport <65535 {
 		cfg.UpdPort = cmdrootudpport
 	}
-	if cmdroottcpport != 65566 {
+	if cmdroottcpport >0 && cmdroottcpport <65535{
 		cfg.TcpPort = cmdroottcpport
 	}
 	if cmdropstennap != "" {

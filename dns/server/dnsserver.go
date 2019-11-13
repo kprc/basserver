@@ -7,6 +7,13 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"encoding/binary"
+
+	"encoding/base64"
+)
+
+const (
+	TypeBCAddr = 65
 )
 
 var (
@@ -18,6 +25,15 @@ var(
 	tcpServer *dns.Server
 )
 
+
+type DR struct {
+	BAS_Ethereum.DomainRecord
+}
+
+func (dr *DR)IntIPv4() uint32 {
+	 return  binary.BigEndian.Uint32(dr.IPv4[:])
+}
+
 func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 	//todo...
 	m := msg.Copy()
@@ -25,26 +41,39 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 	m.Compress = true
 	m.Response = true
 
-	A := &dns.A{}
+	q:=m.Question[0]
 
-	A.Hdr.Name = m.Question[0].Name
-	A.Hdr.Rrtype = dns.TypeA
-	A.Hdr.Class = dns.ClassINET
-	A.Hdr.Ttl = 10
-	A.Hdr.Rdlength = 4
-	//A.A = net.ParseIP("123.56.153.221")
-
-	//hash:=solsha3.SoliditySHA3(solsha3.String(A.Hdr.Name))
-	qn := A.Hdr.Name
+	qn := q.Name
 
 	if qn[len(qn)-1] == '.' {
 		qn = qn[:len(qn)-1]
 
 	}
 
-	dr, err := BAS_Ethereum.QueryByString(qn)
+	var bdr BAS_Ethereum.DomainRecord
+	var err error
 
-	if err != nil {
+	if q.Qtype == dns.TypeA{
+		bdr, err = BAS_Ethereum.QueryByString(qn)
+	}
+
+	log.Println("QType: ",q.Qtype)
+
+	if q.Qtype == TypeBCAddr{
+		log.Println(qn)
+		var b []byte
+		b,err = base64.StdEncoding.DecodeString(qn)
+		var barr [32]byte
+		if err == nil{
+			for i:=0;i<len(b);i++{
+				barr[i] = b[i]
+			}
+			bdr,err = BAS_Ethereum.QueryByBCAddress(barr)
+		}
+	}
+
+	dr := &DR{bdr}
+	if err != nil || dr.IntIPv4() == 0 {
 		log.Println("Can't Get Domain Name info")
 		m.Rcode = dns.RcodeBadKey
 
@@ -52,6 +81,14 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 
 		return
 	}
+
+	A := &dns.A{}
+
+	A.Hdr.Name = q.Name
+	A.Hdr.Rrtype = dns.TypeA
+	A.Hdr.Class = dns.ClassINET
+	A.Hdr.Ttl = 10
+	A.Hdr.Rdlength = 4
 
 	A.A = net.IPv4(dr.IPv4[0], dr.IPv4[1], dr.IPv4[2], dr.IPv4[3])
 
