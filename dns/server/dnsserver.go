@@ -70,6 +70,9 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 
 func DNSServerDaemon() {
 	cfg := config.GetBasDCfg()
+
+	//fmt.Println(*cfg)
+
 	uport := cfg.UpdPort
 	uaddr := ":" + strconv.Itoa(uport)
 
@@ -88,7 +91,7 @@ func DNSServerDaemon() {
 
 	taddr := ":" + strconv.Itoa(tport)
 
-	log.Println("DNS Server Start at tcp", uaddr)
+	log.Println("DNS Server Start at tcp", taddr)
 
 	tcpServer = &dns.Server{Addr:taddr,Net:"tcp4",Handler:dnshandle}
 

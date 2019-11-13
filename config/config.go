@@ -90,6 +90,8 @@ func PreLoad() *BASDConfig {
 func LoadFromCfgFile(file string) *BASDConfig {
 	bc := &BASDConfig{}
 
+	bc.InitCfg()
+
 	bcontent, err := tools.OpenAndReadAll(file)
 	if err != nil {
 		log.Fatal("Load Config file failed")
@@ -110,11 +112,19 @@ func LoadFromCfgFile(file string) *BASDConfig {
 
 }
 
-func LoadFromCmd(bc *BASDConfig) *BASDConfig {
+func LoadFromCmd(initfromcmd func(cmdbc *BASDConfig) *BASDConfig ) *BASDConfig {
 	bascfgInstLock.Lock()
 	defer bascfgInstLock.Unlock()
 
-	bascfgInst = bc.Load()
+	lbc:= newBasDCfg().Load()
+
+	if lbc !=nil{
+		bascfgInst = lbc
+	}else{
+		lbc=newBasDCfg()
+	}
+
+	bascfgInst = initfromcmd(lbc)
 
 	return bascfgInst
 }

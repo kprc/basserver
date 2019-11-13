@@ -77,13 +77,15 @@ func InitCfg() {
 			return
 		}
 	} else {
-		config.LoadFromCmd(cfginit())
+		config.LoadFromCmd(cfginit)
 	}
 	Set2SmartContract()
 }
 
 func Set2SmartContract() {
 	cfg := config.GetBasDCfg()
+
+	//fmt.Println(*cfg)
 
 	if cfg.RopstenNAP != "" {
 		BAS_Ethereum.RopstenNetworkAccessPoint = cfg.RopstenNAP
@@ -99,13 +101,12 @@ func Set2SmartContract() {
 
 }
 
-func cfginit() *config.BASDConfig {
-	cfg := &config.BASDConfig{}
-	cfg.InitCfg()
-	if cmdrootudpport > 0 {
+func cfginit(bc *config.BASDConfig) *config.BASDConfig {
+	cfg := bc
+	if cmdrootudpport != 65566 {
 		cfg.UpdPort = cmdrootudpport
 	}
-	if cmdroottcpport > 0 {
+	if cmdroottcpport != 65566 {
 		cfg.TcpPort = cmdroottcpport
 	}
 	if cmdropstennap != "" {
@@ -134,8 +135,8 @@ func init() {
 	// when this action is called directly.
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	rootCmd.Flags().IntVarP(&cmdrootudpport, "tcp-listen-port", "t", 53, "local tcp listen port")
-	rootCmd.Flags().IntVarP(&cmdrootudpport, "udp-listen-port", "u", 53, "local udp listen port")
+	rootCmd.Flags().IntVarP(&cmdroottcpport, "tcp-listen-port", "t", 65566, "local tcp listen port")
+	rootCmd.Flags().IntVarP(&cmdrootudpport, "udp-listen-port", "u", 65566, "local udp listen port")
 	rootCmd.Flags().StringVarP(&cmdropstennap, "ropsten-network-access-point", "r", "", "ropsten network access point")
 	rootCmd.Flags().StringVarP(&cmdbastokenaddr, "bas-token-address", "a", "", "bas token address")
 	rootCmd.Flags().StringVarP(&cmdbasmgraddr, "bas-mgr-address", "m", "", "bas manager address")
