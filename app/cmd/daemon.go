@@ -83,8 +83,8 @@ func init() {
 	// is called directly, e.g.:
 	// daemonCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	daemonCmd.Flags().IntVarP(&cmdrootudpport, "tcp-listen-port", "t", 53, "local tcp listen port")
-	daemonCmd.Flags().IntVarP(&cmdrootudpport, "udp-listen-port", "u", 53, "local udp listen port")
+	daemonCmd.Flags().IntVarP(&cmdroottcpport, "tcp-listen-port", "t", 65566, "local tcp listen port")
+	daemonCmd.Flags().IntVarP(&cmdrootudpport, "udp-listen-port", "u", 65566, "local udp listen port")
 	daemonCmd.Flags().StringVarP(&cmdropstennap, "ropsten-network-access-point", "r", "", "ropsten network access point")
 	daemonCmd.Flags().StringVarP(&cmdbastokenaddr, "bas-token-address", "a", "", "bas token address")
 	daemonCmd.Flags().StringVarP(&cmdbasmgraddr, "bas-mgr-address", "m", "", "bas manager address")

@@ -143,7 +143,7 @@ func GetBASDCFGFile() string {
 }
 
 func (bc *BASDConfig)Save()  {
-	jbytes,err:=json.Marshal(*bc)
+	jbytes,err:=json.MarshalIndent(*bc," ","\t")
 
 	if err!=nil{
 		log.Println("Save BASD Configuration json marshal failed",err)
