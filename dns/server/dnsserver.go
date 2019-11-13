@@ -8,8 +8,7 @@ import (
 	"net"
 	"strconv"
 	"encoding/binary"
-
-	"encoding/base64"
+	"github.com/btcsuite/btcutil/base58"
 )
 
 const (
@@ -57,19 +56,20 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 		bdr, err = BAS_Ethereum.QueryByString(qn)
 	}
 
-	log.Println("QType: ",q.Qtype)
+	//log.Println("QType: ",q.Qtype)
 
 	if q.Qtype == TypeBCAddr{
-		log.Println(qn)
+		//log.Println(qn)
 		var b []byte
-		b,err = base64.StdEncoding.DecodeString(qn)
+		b = base58.Decode(qn)
 		var barr [32]byte
-		if err == nil{
-			for i:=0;i<len(b);i++{
-				barr[i] = b[i]
-			}
-			bdr,err = BAS_Ethereum.QueryByBCAddress(barr)
+
+		for i:=0;i<len(b);i++{
+			barr[i] = b[i]
 		}
+
+		bdr,err = BAS_Ethereum.QueryByBCAddress(barr)
+
 	}
 
 	dr := &DR{bdr}
@@ -93,7 +93,6 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 	A.A = net.IPv4(dr.IPv4[0], dr.IPv4[1], dr.IPv4[2], dr.IPv4[3])
 
 	log.Println("Request Name: ", qn, A.A.String())
-	log.Println("debug name: ", A.Hdr.Name)
 
 	var rr []dns.RR
 
