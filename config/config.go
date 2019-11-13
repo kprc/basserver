@@ -158,6 +158,7 @@ func (bc *BASDConfig)Save()  {
 		log.Println("Save BASD Configuration to file failed",err)
 	}
 
+
 }
 
 func IsInitialized()  bool{

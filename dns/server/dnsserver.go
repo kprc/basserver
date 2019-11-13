@@ -132,10 +132,11 @@ func DNSServerDaemon() {
 
 	tcpServer = &dns.Server{Addr:taddr,Net:"tcp4",Handler:dnshandle}
 
-	log.Fatal(tcpServer.ListenAndServe())
+	tcpServer.ListenAndServe()
 }
 
 func DNSServerStop()  {
+
 	if udpServer != nil{
 		udpServer.Shutdown()
 		udpServer = nil
@@ -145,4 +146,5 @@ func DNSServerStop()  {
 		tcpServer.Shutdown()
 		tcpServer = nil
 	}
+
 }
