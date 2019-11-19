@@ -96,7 +96,7 @@ func Set2SmartContract() {
 	}
 
 	if cfg.MgrAddr != "" {
-		BAS_Ethereum.BASManagerAddress = cfg.MgrAddr
+		BAS_Ethereum.BASManagerSimpleAddress = cfg.MgrAddr
 	}
 
 }

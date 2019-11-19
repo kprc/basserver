@@ -44,6 +44,8 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 
 	qn := q.Name
 
+	//log.Println("Get query string",qn)
+
 	if qn[len(qn)-1] == '.' {
 		qn = qn[:len(qn)-1]
 
@@ -56,7 +58,7 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 		bdr, err = BAS_Ethereum.QueryByString(qn)
 	}
 
-	//log.Println("QType: ",q.Qtype)
+	log.Println("QType: ",q.Qtype,"query string",qn)
 
 	if q.Qtype == TypeBCAddr{
 		//log.Println(qn)
@@ -74,7 +76,7 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 
 	dr := &DR{bdr}
 	if err != nil || dr.IntIPv4() == 0 {
-		log.Println("Can't Get Domain Name info")
+		log.Println("Can't Get Domain Name info",q.Name)
 		m.Rcode = dns.RcodeBadKey
 
 		writer.WriteMsg(m)

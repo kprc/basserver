@@ -21,6 +21,7 @@ type BASDConfig struct {
 	TokenAddr  string `json:"tokenaddr"`
 	MgrAddr    string `json:"mgraddr"`
 	CmdListenPort string `json:"cmdlistenport"`
+	ResolvDns []string `json:"resolvdns"`
 }
 
 var (
@@ -32,6 +33,7 @@ func (bc *BASDConfig) InitCfg() *BASDConfig{
 	bc.UpdPort = 53
 	bc.TcpPort = 53
 	bc.CmdListenPort = "127.0.0.1:59527"
+	bc.ResolvDns = []string{"202.106.0.20","8.8.8.8","202.106.46.151"}
 
 	return bc
 }
