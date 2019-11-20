@@ -3,12 +3,15 @@ package server
 import (
 	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
 	"github.com/kprc/basserver/config"
+
 	"github.com/miekg/dns"
 	"log"
 	"net"
 	"strconv"
 	"encoding/binary"
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/pkg/errors"
+
 )
 
 const (
@@ -106,6 +109,167 @@ func DnsHandle(writer dns.ResponseWriter, msg *dns.Msg) {
 
 }
 
+func sendErrMsg(w dns.ResponseWriter, msg *dns.Msg, errCode int)  {
+	m := msg.Copy()
+
+	m.Compress = true
+	m.Response = true
+
+	m.Rcode = errCode
+
+	w.WriteMsg(m)
+}
+
+func buildAnswer(ipv4 [4]byte,q dns.Question)  []dns.RR {
+	A := &dns.A{}
+
+	A.Hdr.Name = q.Name
+	A.Hdr.Rrtype = dns.TypeA
+	A.Hdr.Class = dns.ClassINET
+	A.Hdr.Ttl = 10
+	A.Hdr.Rdlength = 4
+
+	A.A = net.IPv4(ipv4[0], ipv4[1], ipv4[2], ipv4[3])
+
+	log.Println("Request Name: ", q.Name, A.A.String())
+
+	var rr []dns.RR
+
+	rr = append(rr, A)
+
+	return rr
+}
+
+
+func replyTypA(w dns.ResponseWriter,msg *dns.Msg,q dns.Question) error {
+
+	qn := q.Name
+	if qn[len(qn)-1] == '.' {
+		qn = qn[:len(qn)-1]
+
+	}
+	if bdr, err := BAS_Ethereum.QueryByString(qn); err != nil {
+		return errors.New("Query DN from Ethereum error: " + err.Error())
+	} else {
+		dr:=&DR{bdr}
+		if dr.IntIPv4() == 0{
+			return errors.New("ipv4 address error")
+		}
+		m:=msg.Copy()
+		m.Compress = true
+		m.Response = true
+
+		m.Answer = buildAnswer(dr.IPv4,q)
+
+		w.WriteMsg(m)
+
+		return nil
+	}
+}
+
+func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg, q dns.Question)  {
+
+	for{
+
+		s:=GetDns()
+
+		if s == ""{
+			sendErrMsg(w,msg,dns.RcodeServerFailure)
+			return
+		}
+
+		if m,err:=dns.Exchange(msg,s+":53");err!=nil{
+			FailDns(s)
+		}else{
+			w.WriteMsg(m)
+			return
+		}
+
+	}
+}
+
+func replyTypPTR(w dns.ResponseWriter,msg *dns.Msg,q dns.Question) error {
+	return nil
+}
+
+func replyTraditionTypPTR(w dns.ResponseWriter,msg *dns.Msg, q dns.Question)  {
+
+}
+
+func replyTypBCA(w dns.ResponseWriter,msg *dns.Msg,q dns.Question) error {
+	qn := q.Name
+	if qn[len(qn)-1] == '.' {
+		qn = qn[:len(qn)-1]
+
+	}
+
+	var b []byte
+	b = base58.Decode(qn)
+	var barr [32]byte
+
+	for i:=0;i<len(b);i++{
+		barr[i] = b[i]
+	}
+
+
+	if bdr, err := BAS_Ethereum.QueryByBCAddress(barr); err != nil {
+		return errors.New("Query BCA from Ethereum error: " + err.Error())
+	} else {
+		dr:=&DR{bdr}
+		if dr.IntIPv4() == 0{
+			return errors.New("ipv4 address error")
+		}
+		m:=msg.Copy()
+		m.Compress = true
+		m.Response = true
+
+		m.Answer = buildAnswer(dr.IPv4,q)
+
+		w.WriteMsg(m)
+
+		return nil
+	}
+}
+
+func DnsHandleTradition(w dns.ResponseWriter,msg *dns.Msg)  {
+	if len(msg.Question)==0{
+		sendErrMsg(w,msg,dns.RcodeFormatError)
+		return
+	}
+	q:=msg.Question[0]
+
+	if q.Qclass != dns.ClassINET{
+		sendErrMsg(w,msg,dns.RcodeNotImplemented)
+		return
+	}
+
+	switch q.Qtype {
+	case dns.TypeA:
+		if err:=replyTypA(w,msg,q);err!=nil{
+			replyTraditionTypA(w,msg,q)
+		}
+	case dns.TypePTR:
+		if err:=replyTypPTR(w,msg,q);err!=nil{
+			replyTraditionTypPTR(w,msg,q)
+		}
+	case TypeBCAddr:
+
+		if err:=replyTypBCA(w,msg,q);err!=nil{
+			//replyTraditionTypPTR(w,msg,q)
+			sendErrMsg(w,msg,dns.RcodeBadKey)
+		}
+
+	default:
+		sendErrMsg(w,msg,dns.RcodeNotImplemented)
+		return
+	}
+
+}
+
+
+
+
+
 func DNSServerDaemon() {
 	cfg := config.GetBasDCfg()
 
@@ -114,7 +278,7 @@ func DNSServerDaemon() {
 	uport := cfg.UpdPort
 	uaddr := ":" + strconv.Itoa(uport)
 
-	dnshandle = DnsHandle
+	dnshandle = DnsHandleTradition
 
 	log.Println("DNS Server Start at udp", uaddr)
 
