@@ -3,7 +3,8 @@ package server
 import (
 	"sync"
 	"github.com/kprc/basserver/config"
-	"github.com/kprc/nbsnetwork/tools"
+	"sort"
+	"log"
 )
 
 const(
@@ -15,18 +16,20 @@ const(
 
 type ResolvStatus struct {
 	Status int32
-	LastFailTime int64
+	FailCnt int
 	IPStr  string
+	Idx int
 }
 
 
 var (
 	gResolvStatusArr []*ResolvStatus
 	gResolvStatusArrLock sync.Mutex
+	curIdx int
 )
 
-func newResolvStatus(dns string) *ResolvStatus {
-	return &ResolvStatus{Status:ResolvNormal,IPStr:dns}
+func newResolvStatus(dns string,idx int) *ResolvStatus {
+	return &ResolvStatus{Status:ResolvNormal,IPStr:dns,Idx:idx}
 }
 
 func getResolvStatusArr() []*ResolvStatus {
@@ -38,7 +41,7 @@ func getResolvStatusArr() []*ResolvStatus {
 			cfg:=config.GetBasDCfg()
 			gResolvStatusArr = make([]*ResolvStatus,len(cfg.ResolvDns))
 			for idx,dns:=range cfg.ResolvDns{
-				gResolvStatusArr[idx] = newResolvStatus(dns)
+				gResolvStatusArr[idx] = newResolvStatus(dns,idx)
 			}
 		}
 	}
@@ -51,37 +54,33 @@ func GetDns() string  {
 	gResolvStatusArrLock.Lock()
 	defer  gResolvStatusArrLock.Unlock()
 
-	for i:=0;i<len(ndns);i++{
-		if ndns[i].LastFailTime == 0{
-			return ndns[i].IPStr
-		}
-	}
-
-	now := tools.GetNowMsTime()
-
-	for i:=0; i<len(ndns);i++{
-		if now - ndns[i].LastFailTime > ResolvReuseTime{
-			ndns[i].LastFailTime = 0
-			ndns[i].Status = ResolvNormal
-
-			return  ndns[i].IPStr
-		}
-	}
+	return ndns[curIdx].IPStr
 
 	return ""
-
 }
 
 func FailDns(ips string)  {
-	ndns := getResolvStatusArr()
+	ndns:=getResolvStatusArr()
 
 	gResolvStatusArrLock.Lock()
 	defer  gResolvStatusArrLock.Unlock()
 
 	for i:=0;i<len(ndns);i++{
 		if ndns[i].IPStr == ips{
-			ndns[i].Status = ResolvAbnormal
-			ndns[i].LastFailTime = tools.GetNowMsTime()
+			ndns[i].FailCnt ++
 		}
 	}
+
+	sort.Slice(ndns, func(i, j int) bool {
+		if ndns[i].FailCnt < ndns[j].FailCnt{
+			return true
+		}
+		return false
+	})
+
+	log.Println(ndns)
+
+	curIdx = ndns[0].Idx
+
 }
+

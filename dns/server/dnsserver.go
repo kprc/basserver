@@ -167,7 +167,7 @@ func replyTypA(w dns.ResponseWriter,msg *dns.Msg,q dns.Question) error {
 	}
 }
 
-func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg, q dns.Question)  {
+func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg)  {
 
 	for{
 
@@ -177,11 +177,13 @@ func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg, q dns.Question)  {
 			sendErrMsg(w,msg,dns.RcodeServerFailure)
 			return
 		}
-
+		log.Println(s+":53",msg.Question[0].Name)
 		if m,err:=dns.Exchange(msg,s+":53");err!=nil{
 			FailDns(s)
+			log.Println("failed "+s+":53",msg.Question[0].Name)
 		}else{
 			w.WriteMsg(m)
+			log.Println("success "+s+":53",msg.Question[0].Name)
 			return
 		}
 
@@ -246,12 +248,13 @@ func DnsHandleTradition(w dns.ResponseWriter,msg *dns.Msg)  {
 	switch q.Qtype {
 	case dns.TypeA:
 		if err:=replyTypA(w,msg,q);err!=nil{
-			replyTraditionTypA(w,msg,q)
+			replyTraditionTypA(w,msg)
 		}
 	case dns.TypePTR:
-		if err:=replyTypPTR(w,msg,q);err!=nil{
-			replyTraditionTypPTR(w,msg,q)
-		}
+		//if err:=replyTypPTR(w,msg,q);err!=nil{
+		//	replyTraditionTypPTR(w,msg,q)
+		//}
+		replyTraditionTypA(w,msg)
 	case TypeBCAddr:
 
 		if err:=replyTypBCA(w,msg,q);err!=nil{
@@ -260,7 +263,8 @@ func DnsHandleTradition(w dns.ResponseWriter,msg *dns.Msg)  {
 		}
 
 	default:
-		sendErrMsg(w,msg,dns.RcodeNotImplemented)
+		//sendErrMsg(w,msg,dns.RcodeNotImplemented)
+		replyTraditionTypA(w,msg)
 		return
 	}
 
