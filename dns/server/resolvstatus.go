@@ -98,3 +98,6 @@ func FailDns(ips string)  {
 
 }
 
+func MaxTimes() int  {
+	return 2*len(getResolvStatusArr())
+}

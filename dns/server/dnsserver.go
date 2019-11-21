@@ -168,8 +168,11 @@ func replyTypA(w dns.ResponseWriter,msg *dns.Msg,q dns.Question) error {
 }
 
 func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg)  {
+	cnt:=0
 
 	for{
+
+		cnt ++
 
 		s:=GetDns()
 
@@ -181,6 +184,10 @@ func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg)  {
 		if m,err:=dns.Exchange(msg,s+":53");err!=nil{
 			FailDns(s)
 			log.Println("failed "+s+":53",msg.Question[0].Name)
+			if cnt >= MaxTimes(){
+				sendErrMsg(w,msg,dns.RcodeBadKey)
+				return
+			}
 		}else{
 			w.WriteMsg(m)
 			log.Println("success "+s+":53",msg.Question[0].Name)
