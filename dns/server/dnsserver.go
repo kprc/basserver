@@ -177,7 +177,7 @@ func replyTraditionTypA(w dns.ResponseWriter,msg *dns.Msg)  {
 			sendErrMsg(w,msg,dns.RcodeServerFailure)
 			return
 		}
-		log.Println(s+":53",msg.Question[0].Name)
+		//log.Println(s+":53",msg.Question[0].Name)
 		if m,err:=dns.Exchange(msg,s+":53");err!=nil{
 			FailDns(s)
 			log.Println("failed "+s+":53",msg.Question[0].Name)

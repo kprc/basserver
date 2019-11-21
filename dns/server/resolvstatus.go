@@ -4,7 +4,7 @@ import (
 	"sync"
 	"github.com/kprc/basserver/config"
 	"sort"
-	"log"
+	"fmt"
 )
 
 const(
@@ -21,11 +21,15 @@ type ResolvStatus struct {
 	Idx int
 }
 
+func (rs *ResolvStatus)String() string {
+	return fmt.Sprint("ip: ",rs.IPStr,"  Status: ",rs.Status,"  failcnt: ",rs.FailCnt,"  idx: ",rs.Idx)
+}
+
 
 var (
 	gResolvStatusArr []*ResolvStatus
 	gResolvStatusArrLock sync.Mutex
-	curIdx int
+
 )
 
 func newResolvStatus(dns string,idx int) *ResolvStatus {
@@ -54,9 +58,16 @@ func GetDns() string  {
 	gResolvStatusArrLock.Lock()
 	defer  gResolvStatusArrLock.Unlock()
 
-	return ndns[curIdx].IPStr
+	//fmt.Println("GetDns CurIdx: ",curIdx, " IP: ",ndns[curIdx].IPStr)
+	//
+	//fmt.Println("=========")
+	//for _,n:=range ndns{
+	//	fmt.Println(n.String())
+	//}
+	//fmt.Println("=========")
 
-	return ""
+	return ndns[0].IPStr
+
 }
 
 func FailDns(ips string)  {
@@ -78,9 +89,12 @@ func FailDns(ips string)  {
 		return false
 	})
 
-	log.Println(ndns)
+	//for _,n:=range ndns{
+	//	fmt.Println(n.String())
+	//}
+	//fmt.Println("curIdx:",curIdx)
 
-	curIdx = ndns[0].Idx
+	//curIdx = ndns[0].Idx
 
 }
 
