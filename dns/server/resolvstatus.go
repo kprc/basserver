@@ -1,62 +1,59 @@
 package server
 
 import (
-	"sync"
+	"fmt"
 	"github.com/kprc/basserver/config"
 	"sort"
-	"fmt"
+	"sync"
 )
 
-const(
-	ResolvReuseTime int64 = 86400000   //ms
-	ResolvNormal int32 = 1
-	ResolvAbnormal int32 = 2
+const (
+	ResolvReuseTime int64 = 86400000 //ms
+	ResolvNormal    int32 = 1
+	ResolvAbnormal  int32 = 2
 )
-
 
 type ResolvStatus struct {
-	Status int32
+	Status  int32
 	FailCnt int
-	IPStr  string
-	Idx int
+	IPStr   string
+	Idx     int
 }
 
-func (rs *ResolvStatus)String() string {
-	return fmt.Sprint("ip: ",rs.IPStr,"  Status: ",rs.Status,"  failcnt: ",rs.FailCnt,"  idx: ",rs.Idx)
+func (rs *ResolvStatus) String() string {
+	return fmt.Sprint("ip: ", rs.IPStr, "  Status: ", rs.Status, "  failcnt: ", rs.FailCnt, "  idx: ", rs.Idx)
 }
-
 
 var (
-	gResolvStatusArr []*ResolvStatus
+	gResolvStatusArr     []*ResolvStatus
 	gResolvStatusArrLock sync.Mutex
-
 )
 
-func newResolvStatus(dns string,idx int) *ResolvStatus {
-	return &ResolvStatus{Status:ResolvNormal,IPStr:dns,Idx:idx}
+func newResolvStatus(dns string, idx int) *ResolvStatus {
+	return &ResolvStatus{Status: ResolvNormal, IPStr: dns, Idx: idx}
 }
 
 func getResolvStatusArr() []*ResolvStatus {
-	if gResolvStatusArr == nil{
+	if gResolvStatusArr == nil {
 		gResolvStatusArrLock.Lock()
 		defer gResolvStatusArrLock.Unlock()
 
-		if gResolvStatusArr == nil{
-			cfg:=config.GetBasDCfg()
-			gResolvStatusArr = make([]*ResolvStatus,len(cfg.ResolvDns))
-			for idx,dns:=range cfg.ResolvDns{
-				gResolvStatusArr[idx] = newResolvStatus(dns,idx)
+		if gResolvStatusArr == nil {
+			cfg := config.GetBasDCfg()
+			gResolvStatusArr = make([]*ResolvStatus, len(cfg.ResolvDns))
+			for idx, dns := range cfg.ResolvDns {
+				gResolvStatusArr[idx] = newResolvStatus(dns, idx)
 			}
 		}
 	}
 	return gResolvStatusArr
 }
 
-func GetDns() string  {
+func GetDns() string {
 	ndns := getResolvStatusArr()
 
 	gResolvStatusArrLock.Lock()
-	defer  gResolvStatusArrLock.Unlock()
+	defer gResolvStatusArrLock.Unlock()
 
 	//fmt.Println("GetDns CurIdx: ",curIdx, " IP: ",ndns[curIdx].IPStr)
 	//
@@ -70,20 +67,20 @@ func GetDns() string  {
 
 }
 
-func FailDns(ips string)  {
-	ndns:=getResolvStatusArr()
+func FailDns(ips string) {
+	ndns := getResolvStatusArr()
 
 	gResolvStatusArrLock.Lock()
-	defer  gResolvStatusArrLock.Unlock()
+	defer gResolvStatusArrLock.Unlock()
 
-	for i:=0;i<len(ndns);i++{
-		if ndns[i].IPStr == ips{
-			ndns[i].FailCnt ++
+	for i := 0; i < len(ndns); i++ {
+		if ndns[i].IPStr == ips {
+			ndns[i].FailCnt++
 		}
 	}
 
 	sort.Slice(ndns, func(i, j int) bool {
-		if ndns[i].FailCnt < ndns[j].FailCnt{
+		if ndns[i].FailCnt < ndns[j].FailCnt {
 			return true
 		}
 		return false
@@ -98,6 +95,6 @@ func FailDns(ips string)  {
 
 }
 
-func MaxTimes() int  {
-	return 2*len(getResolvStatusArr())
+func MaxTimes() int {
+	return 2 * len(getResolvStatusArr())
 }

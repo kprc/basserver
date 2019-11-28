@@ -1,10 +1,9 @@
 package cmdcommon
 
 import (
-
-	"github.com/kprc/nbsnetwork/tools"
-	"github.com/kprc/basserver/config"
 	"errors"
+	"github.com/kprc/basserver/config"
+	"github.com/kprc/nbsnetwork/tools"
 )
 
 func IsProcessCanStarted() (bool, error) {

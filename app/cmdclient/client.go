@@ -8,11 +8,10 @@ import (
 	"context"
 	"fmt"
 
-
-	"github.com/kprc/basserver/config"
 	"github.com/kprc/basserver/app/cmdcommon"
-	"strings"
 	"github.com/kprc/basserver/app/cmdpb"
+	"github.com/kprc/basserver/config"
+	"strings"
 )
 
 type CmdConnection struct {
@@ -90,4 +89,3 @@ func (cc *CmdClient) GetRpcClientConn() *grpc.ClientConn {
 func (cc *CmdClient) GetRpcCnxt() *context.Context {
 	return &cc.conn.ctx
 }
-

@@ -22,10 +22,10 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 
-	"path"
 	"github.com/kprc/basserver/app/cmdcommon"
-	"github.com/kprc/basserver/config"
 	"github.com/kprc/basserver/app/cmdservice"
+	"github.com/kprc/basserver/config"
+	"path"
 )
 
 // daemonCmd represents the daemon command
@@ -35,8 +35,8 @@ var daemonCmd = &cobra.Command{
 	Long:  `basd start in backend`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_,err:=cmdcommon.IsProcessCanStarted()
-		if err!=nil{
+		_, err := cmdcommon.IsProcessCanStarted()
+		if err != nil {
 			log.Println(err)
 			return
 		}

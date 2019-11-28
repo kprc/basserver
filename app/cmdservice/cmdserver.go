@@ -6,14 +6,14 @@ import (
 
 	"net"
 
+	"errors"
 	"google.golang.org/grpc/reflection"
 	"log"
-	"errors"
 
-	"github.com/kprc/basserver/config"
-	"github.com/kprc/basserver/dns/server"
 	"github.com/kprc/basserver/app/cmdpb"
 	"github.com/kprc/basserver/app/cmdservice/api"
+	"github.com/kprc/basserver/config"
+	"github.com/kprc/basserver/dns/server"
 )
 
 type cmdServer struct {
@@ -64,7 +64,7 @@ func (cs *cmdServer) StartCmdService() {
 	}
 	cs.grpcServer = grpc.NewServer()
 
-	cmdpb.RegisterDefaultcmdsrvServer(cs.grpcServer,&api.CmdDefaultServer{stop})
+	cmdpb.RegisterDefaultcmdsrvServer(cs.grpcServer, &api.CmdDefaultServer{stop})
 
 	reflection.Register(cs.grpcServer)
 	log.Println("Commamd line server will start at", cs.localaddr)
@@ -84,4 +84,3 @@ func (cs *cmdServer) StopCmdService() {
 func stop() {
 	GetCmdServerInst().StopCmdService()
 }
-

@@ -19,12 +19,12 @@ import (
 	"os"
 
 	"github.com/Ungigdu/BAS_contract_go/BAS_Ethereum"
+	"github.com/kprc/basserver/app/cmdcommon"
+	"github.com/kprc/basserver/app/cmdservice"
 	"github.com/kprc/basserver/config"
 	"github.com/kprc/basserver/dns/server"
 	"github.com/spf13/cobra"
-	"github.com/kprc/basserver/app/cmdcommon"
 	"log"
-	"github.com/kprc/basserver/app/cmdservice"
 )
 
 //var cfgFile string
@@ -45,8 +45,8 @@ var rootCmd = &cobra.Command{
 	Long:  `start basd in current shell`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		_,err:=cmdcommon.IsProcessCanStarted()
-		if err!=nil{
+		_, err := cmdcommon.IsProcessCanStarted()
+		if err != nil {
 			log.Println(err)
 			return
 		}
@@ -103,10 +103,10 @@ func Set2SmartContract() {
 
 func cfginit(bc *config.BASDConfig) *config.BASDConfig {
 	cfg := bc
-	if cmdrootudpport >0 && cmdrootudpport <65535 {
+	if cmdrootudpport > 0 && cmdrootudpport < 65535 {
 		cfg.UpdPort = cmdrootudpport
 	}
-	if cmdroottcpport >0 && cmdroottcpport <65535{
+	if cmdroottcpport > 0 && cmdroottcpport < 65535 {
 		cfg.TcpPort = cmdroottcpport
 	}
 	if cmdropstennap != "" {

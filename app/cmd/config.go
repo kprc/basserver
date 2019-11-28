@@ -16,9 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/kprc/basserver/app/cmdcommon"
 	"github.com/kprc/basserver/app/cmdclient"
+	"github.com/kprc/basserver/app/cmdcommon"
+	"github.com/spf13/cobra"
 	"log"
 )
 
@@ -26,14 +26,14 @@ import (
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "show configuration",
-	Long: `show configuration`,
+	Long:  `show configuration`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if _, err := cmdcommon.IsProcessStarted(); err != nil {
 			log.Println(err)
 			return
 		}
 
-		cmdclient.DefaultCmdSend("",cmdcommon.CMD_CONFIG_SHOW)
+		cmdclient.DefaultCmdSend("", cmdcommon.CMD_CONFIG_SHOW)
 	},
 }
 
